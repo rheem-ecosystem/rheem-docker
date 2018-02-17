@@ -5,89 +5,65 @@ Multiple node cluster on Docker for Rheem Ecosystem
 ## Run Rheem Cluster within Docker Containers
 
 
-##### 1. pull docker image
-
-```
-sudo docker pull rheem/rheem:1.0
-```
-
-##### 2. clone github repository
+##### 1. clone github repository
 
 ```
 git clone https://github.com/rheem-ecosystem/rheem-docker
 ```
 
-##### 3. create rheem network
+
+##### 2. create folders in your machine for comunication with dockers
 
 ```
-sudo docker network create --driver=bridge rheem-net
+mkdir /data
+mkdir /data/hdfs
+mkdir /data/rheem
+mkdir /data/rheem/code
+mkdir /data/rheem/script
+mkdir /data/rheem/output
+mkdir /data/rheem/conf
 ```
 
-##### 4. start container
+##### 3. docker compose
 
 ```
-cd rheem-docker
-sudo ./start-container.sh
+sudo docker-compose up
 ```
 
-**output:**
+
+##### 4. Upload file HDFS
 
 ```
-start rheem-master container...
-start rheem-slave1 container...
-start rheem-slave2 container...
-root@rheem-master:~# 
-```
-- start 3 containers with 1 master and 3 slaves
-- you will get into the /root directory of rheem-master container
-
-##### 5. start hadoop
+mv path_of_your_file /data/hdfs/
+docker exec -it namenode hdfs dfs -copyFromLocal /data/hdfs/your_file your_path_hdfs
 
 ```
-./start-rheem.sh
-```
 
-##### 6. run wordcount
+##### 5. Upload code to containers
 
 ```
-./run-wordcount.sh
+mv path_of_jar /data/code
+mv path_of_script /data/script
 ```
 
-**output**
+##### 6. Running code in containers
 
 ```
-input file1.txt:
-Hello Rheem
-Hello Docker
-Hello World
-
-wordcount output:
-Docker    1
-Rheem     1
-Hello     3
-World     1
+docker exec -it rheemcontainer run the_name_of_your_script
 ```
 
-### Arbitrary size Rheem cluster
-
-##### 1. pull docker images and clone github repository
-
-##### 2. rebuild docker image
+##### 7. Look of logs
 
 ```
-sudo ./resize-cluster.sh 5
+go to /data/output/the_name_of_your_experiment.{log, err}
 ```
-- specify parameter > 1: 2, 3..
-- this script just rebuild hadoop image with different **slaves** file, which pecifies the name of all slave nodes
 
-
-##### 3. start container
+#### 8. Wordcount
 
 ```
-sudo ./start-container.sh 5
+mv /upload-file/shakespeare.txt /data/hdfs/
+docker exec -it namenode hdfs dfs -mkdir /user
+docker exec -it namenode hdfs dfs -mkdir /user/data
+docker exec -it namenode hdfs dfs -copyFromLocal /data/hdfs/shakeaspeare.txt /user/data/
+docker exec -it rheemcontainer run wordcount
 ```
-- use the same parameter as the step 2
-
-##### 4. run Rheem cluster 
-
-do 5~6 like section A
